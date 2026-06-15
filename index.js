@@ -34,7 +34,7 @@ app.post('/delete-task/:index',(req,res)=>{
     const index = parseInt(req.params.index);
 
         tasks.splice(index, 1);
-        
+
     res.redirect('/');
 });
 
