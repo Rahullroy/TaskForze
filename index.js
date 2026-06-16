@@ -2,7 +2,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const app = express();
-const PORT = 5566;
+const PORT = 5586;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -38,6 +38,16 @@ app.post('/delete-task/:index',(req,res)=>{
     res.redirect('/');
 });
 
+app.post('/complete-task/:index',(req,res)=>{
+    const index = parseInt(req.params.index);
+     if(index >= 0 && index < tasks.length){
+        tasks[index].completed = !tasks[index].completed;
+    }
+
+    res.redirect('/');
+
+
+})
 
 
 
