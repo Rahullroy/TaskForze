@@ -2,7 +2,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const app = express();
-const PORT = 5536;
+const PORT = 5526;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -36,11 +36,13 @@ app.get('/',(req,res)=>{
 app.post('/add-task',(req,res)=>{
     const task = req.body.task;
     const dueDate = req.body.dueDate;
+    const priority = req.body.priority;
     
         tasks.push({
             task: task,
             completed: false,
             dueDate:dueDate,
+            priority:priority
         });
 
     saveTasks();

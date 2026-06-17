@@ -36,6 +36,12 @@
             <br>
             <br>
 
+            <select name="priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+
            <button type="submit">add task here</button>
         </form>
     </div>
@@ -74,6 +80,17 @@
 
             <% if(task.dueDate < today && !task.completed){ %>
                 <p style="color:red;">⚠ Overdue</p>
+            <% } %>
+
+
+            <% if(task.priority== 'High'){ %>
+                <p style="color:red;">HIGH</p>
+            
+            <% } else if(task.priority== 'Medium'){ %>
+                <p style="color:rgba(232, 228, 13, 0.908);">MEDIUM</p>
+    
+            <% }else{ %>
+                <p style="color:rgba(36, 164, 10, 0.908);">LOW</p>
             <% } %>
         
             
