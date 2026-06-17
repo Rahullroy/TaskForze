@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+     <% const today = new Date().toISOString().split('T')[0]; %>
     <header>
         <h1>StudentSprinter</h1>
         <h4>A Page Dedicated To Student Daily Tasks</h4>
@@ -15,6 +17,8 @@
         <p>Completed Tasks: <%=completedTasks%></p>
 
         <p>Pending Tasks: <%=pendingTasks%></p>
+        <p>Today: <%=today%></p>
+
     </header>
 
 
@@ -60,11 +64,18 @@
                 
             <br>
             <br>
+
             <% if(task.dueDate){ %>
                 Due: <%= task.dueDate %>
             <% } %>
             
             <br>
+           
+
+            <% if(task.dueDate < today && !task.completed){ %>
+                <p style="color:red;">⚠ Overdue</p>
+            <% } %>
+        
             
 
             <form action="/delete-task/<%=index%>" method="POST">
