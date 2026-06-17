@@ -2,7 +2,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const app = express();
-const PORT = 5546;
+const PORT = 5536;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -21,7 +21,16 @@ function saveTasks(){
     }
 
 app.get('/',(req,res)=>{
-    res.render("index",{tasks:tasks});
+    const totalTasks = tasks.length;
+
+    const completedTasks = tasks.filter(task => task.completed).length;
+
+    const pendingTasks = tasks.filter(task => !task.completed).length;
+    res.render("index",{
+        tasks,
+        totalTasks,
+        completedTasks,
+        pendingTasks });
 });
 
 app.post('/add-task',(req,res)=>{
@@ -33,6 +42,7 @@ app.post('/add-task',(req,res)=>{
             completed: false,
             dueDate:dueDate,
         });
+
     saveTasks();
     res.redirect('/');
 
