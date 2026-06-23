@@ -19,6 +19,11 @@
         <p>Pending Tasks: <%=pendingTasks%></p>
         <p>Today: <%=today%></p>
 
+        <form action="/" method="GET">
+            <input type="text" name="search" placeholder="Search Task">
+            <button>Search</button>
+</form>
+
     </header>
 
 
@@ -97,6 +102,11 @@
 
             <form action="/delete-task/<%=index%>" method="POST">
                 <button type="submit">Delete</button>
+            </form>
+            <br>
+
+            <form action="/edit-task/<%=index%>" method="POST">
+                <button type="submit">EDIT</button>
             </form>
             <br>
 

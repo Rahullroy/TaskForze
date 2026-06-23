@@ -2,7 +2,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const app = express();
-const PORT = 5526;
+const PORT = 5596;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -26,11 +26,26 @@ app.get('/',(req,res)=>{
     const completedTasks = tasks.filter(task => task.completed).length;
 
     const pendingTasks = tasks.filter(task => !task.completed).length;
-    res.render("index",{
-        tasks,
-        totalTasks,
-        completedTasks,
-        pendingTasks });
+
+    const search = req.query.search;
+
+    let filteredTasks;
+
+    if(!search || search.trim() === ""){
+        filteredTasks = tasks;
+    }
+    else{
+        filteredTasks = tasks.filter(task =>
+            task.task.toLowerCase().includes(search.toLowerCase())
+        );
+    }
+
+   res.render("index",{
+    tasks: filteredTasks,
+    totalTasks,
+    completedTasks,
+    pendingTasks
+});
 });
 
 app.post('/add-task',(req,res)=>{
