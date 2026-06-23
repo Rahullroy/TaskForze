@@ -97,6 +97,25 @@
             <% }else{ %>
                 <p style="color:rgba(36, 164, 10, 0.908);">LOW</p>
             <% } %>
+
+
+
+            <% if(task.editing){ %>
+
+                <form action="/update-task/<%=index%>" method="post">
+
+                    <input
+                        type="text"
+                        name="updatedTask"
+                        value="<%= task.task %>"
+                    >
+
+                    <button>Update</button>
+
+                </form>
+
+            <% } %>
+
         
             
 
@@ -105,7 +124,7 @@
             </form>
             <br>
 
-            <form action="/edit-task/<%=index%>" method="POST">
+            <form action="/edit-task/<%=index%>" method="get">
                 <button type="submit">EDIT</button>
             </form>
             <br>

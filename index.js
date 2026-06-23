@@ -2,7 +2,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const app = express();
-const PORT = 5596;
+const PORT = 5446;
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -57,7 +57,8 @@ app.post('/add-task',(req,res)=>{
             task: task,
             completed: false,
             dueDate:dueDate,
-            priority:priority
+            priority:priority,
+            editing: false,
         });
 
     saveTasks();
@@ -88,6 +89,28 @@ app.post('/complete-task/:index',(req,res)=>{
 
 })
  
+app.get('/edit-task/:index',(req,res)=>{
+    const index = parseInt(req.params.index);
+    tasks[index].editing = true;
+    saveTasks();
+    res.redirect('/');
+
+})
+
+app.post('/update-task/:index',(req,res)=>{
+
+    const index = parseInt(req.params.index);
+
+    const updatedTask = req.body.updatedTask;
+
+    tasks[index].task = updatedTask;
+
+    tasks[index].editing = false;
+
+    saveTasks();
+
+    res.redirect('/');
+})
 
 
 
