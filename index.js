@@ -7,7 +7,27 @@ const app = express();
 const dns = require("dns");
 const PORT = 5432;
 
+//change DNS
+dns.setServers(["1.1.1.1","8.8.8.8"]);
 
+// 1. MongoDB Setup
+const DB_URL = process.env.atlas_URL;
+console.log("Connecting to:", DB_URL);
+
+mongoose.connect(DB_URL)
+    .then(() => console.log('Successfully connected to MongoDB Atlas!'))
+    .catch((err) => console.error('MongoDB connection error:', err));
+
+// 2. Define Schema & Model (Replaces tasks.json logic)
+const taskSchema = new mongoose.Schema({
+    task: { type: String, required: true },
+    completed: { type: Boolean, default: false },
+    dueDate: String,
+    priority: String,
+    editing: { type: Boolean, default: false }
+});
+
+const Task = mongoose.model("Task", taskSchema);
 
 // 3. Express Middleware
 app.use(express.urlencoded({ extended: true }));
