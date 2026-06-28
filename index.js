@@ -1,133 +1,129 @@
-const fs = require("fs");
+require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
+const mongoose = require("mongoose"); // Fixed the incorrect import here!
 const app = express();
-const PORT = 5448;
+const dns = require("dns");
+const PORT = 5432;
 
-app.use(express.urlencoded({extended:true}));
+//change DNS
+dns.setServers(["1.1.1.1","8.8.8.8"]);
+
+// 1. MongoDB Setup
+const DB_URL = process.env.atlas_URL;
+console.log("Connecting to:", DB_URL);
+
+mongoose.connect(DB_URL)
+    .then(() => console.log('Successfully connected to MongoDB Atlas!'))
+    .catch((err) => console.error('MongoDB connection error:', err));
+
+// 2. Define Schema & Model (Replaces tasks.json logic)
+const taskSchema = new mongoose.Schema({
+    task: { type: String, required: true },
+    completed: { type: Boolean, default: false },
+    dueDate: String,
+    priority: String,
+    editing: { type: Boolean, default: false }
+});
+
+const Task = mongoose.model("Task", taskSchema);
+
+// 3. Express Middleware
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.set("view engine","ejs");
-app.set("views",path.resolve("./views"));
+app.set("view engine", "ejs");
+app.set("views", path.resolve("./views"));
 app.use(express.static("public"));
 
-let fileContent = fs.readFileSync('./tasks.json','utf-8');
-let tasks= JSON.parse(fileContent);
+// 4. Routes (Converted to async/await for Database calls)
+app.get('/', async (req, res) => {
+    try {
+        const allTasks = await Task.find({});
+        const totalTasks = allTasks.length;
+        const completedTasks = allTasks.filter(t => t.completed).length;
+        const pendingTasks = allTasks.filter(t => !t.completed).length;
 
+        let progressPercentage = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
 
-function saveTasks(){
-        let taskstring = JSON.stringify(tasks);
-        fs.writeFileSync('./tasks.json',taskstring);
+        const search = req.query.search;
+        let filteredTasks = allTasks;
 
-    }
+        if (search && search.trim() !== "") {
+            filteredTasks = allTasks.filter(t =>
+                t.task.toLowerCase().includes(search.toLowerCase())
+            );
+        }
 
-app.get('/',(req,res)=>{
-    const totalTasks = tasks.length;
-
-    const completedTasks = tasks.filter(task => task.completed).length;
-
-    const pendingTasks = tasks.filter(task => !task.completed).length;
-
-    let progressPercentage = (completedTasks/totalTasks)*100;
-    if(totalTasks == 0){
-        progressPercentage = 0;
-    }
-
-    const search = req.query.search;
-
-    let filteredTasks;
-
-    if(!search || search.trim() === ""){
-        filteredTasks = tasks;
-    }
-    else{
-        filteredTasks = tasks.filter(task =>
-            task.task.toLowerCase().includes(search.toLowerCase())
-        );
-    }
-
-   res.render("index",{
-    tasks: filteredTasks,
-    totalTasks,
-    completedTasks,
-    pendingTasks,
-    progressPercentage,
-});
-});
-
-app.post('/add-task',(req,res)=>{
-    const task = req.body.task;
-    const dueDate = req.body.dueDate;
-    const priority = req.body.priority;
-    
-        tasks.push({
-            task: task,
-            completed: false,
-            dueDate:dueDate,
-            priority:priority,
-            editing: false,
+        res.render("index", {
+            tasks: filteredTasks,
+            totalTasks,
+            completedTasks,
+            pendingTasks,
+            progressPercentage,
         });
-
-    saveTasks();
-    res.redirect('/');
-
-
-})
-
-app.post('/delete-task/:index',(req,res)=>{
-    const index = parseInt(req.params.index);
-
-    tasks.splice(index, 1);
-    saveTasks();
-    
-
-    res.redirect('/');
+    } catch (err) {
+       console.error("Asli Error Yeh Hai Bhai:", err); // Yeh terminal me error print karega
+       res.status(500).send("Database Error: " + err.message);
+    }
 });
 
-app.post('/complete-task/:index',(req,res)=>{
-    const index = parseInt(req.params.index);
-     if(index >= 0 && index < tasks.length){
-        tasks[index].completed = !tasks[index].completed;
+app.post('/add-task', async (req, res) => {
+    try {
+        const newTask = new Task({
+            task: req.body.task,
+            dueDate: req.body.dueDate,
+            priority: req.body.priority
+        });
+        await newTask.save();
+        res.redirect('/');
+    } catch (err) {
+        res.status(500).send(err.message);
     }
-    saveTasks();
+});
 
-    res.redirect('/');
+// NOTE: Changed route parameter from /:index to Mongoose /:id for unique matching
+app.post('/delete-task/:id', async (req, res) => {
+    try {
+        await Task.findByIdAndDelete(req.params.id);
+        res.redirect('/');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
+app.post('/complete-task/:id', async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        task.completed = !task.completed;
+        await task.save();
+        res.redirect('/');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
-})
- 
-app.get('/edit-task/:index',(req,res)=>{
-    const index = parseInt(req.params.index);
-    tasks[index].editing = true;
-    saveTasks();
-    res.redirect('/');
+app.get('/edit-task/:id', async (req, res) => {
+    try {
+        await Task.findByIdAndUpdate(req.params.id, { editing: true });
+        res.redirect('/');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
-})
+app.post('/update-task/:id', async (req, res) => {
+    try {
+        await Task.findByIdAndUpdate(req.params.id, { 
+            task: req.body.updatedTask, 
+            editing: false 
+        });
+        res.redirect('/');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
-app.post('/update-task/:index',(req,res)=>{
-
-    const index = parseInt(req.params.index);
-
-    const updatedTask = req.body.updatedTask;
-
-    tasks[index].task = updatedTask;
-
-    tasks[index].editing = false;
-
-    saveTasks();
-
-    res.redirect('/');
-})
-
-
-
-
-
-
-
-
-
-app.listen(PORT , ( )  => {
-    console.log("server running on port",{PORT});
-})
-
-
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

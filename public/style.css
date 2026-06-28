@@ -9,7 +9,7 @@
   --ink-soft: #670b16;
   --line: #CBD1C2;
   --tab: #D8C9A3;
-  --tab-ink: #6B5B33;
+  --tab-ink: #ffffff;
   --high: #C8493B;
   --high-bg: #F6DCD8;
   --medium: #B9802A;
@@ -22,9 +22,9 @@
 }
 
 body.dark-mode {
-  --paper: #242b3f;
+  --paper: #243050;
   --paper-raised: #293252;
-  --ink: #EDEFE6;
+  --ink: #cb9c44;
   --ink-soft: #9AA3B8;
   --line: #3A4156;
   --tab: #6B5B33;
@@ -56,9 +56,13 @@ a, button, input, select { font-family: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--ink);
-  background-color: #878167;
+  padding: 2px 6px;
+  border-bottom: 1px solid white;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
 }
 
 .header .left h1 {
