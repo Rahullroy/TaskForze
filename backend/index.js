@@ -2,35 +2,31 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
-const cors = require("cors"); // 1. REQUIRE KIYA
+const cors = require("cors"); 
 
 const app = express();
 const PORT = process.env.PORT || 5447;
 
-app.use((req, res, next) => {
-    // Isko '*' kar do taaki koi bhi live frontend seamlessly baat kar sake
-    res.setHeader("Access-Control-Allow-Origin", "*"); 
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(200);
-    }
-    next();
-});
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization"]
+}));
 
-// 3. DATA PARSING MIDDLEWARES
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Iske baad tumhara baki MongoDB connect aur routes ka code aayega ---
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
 const dns = require("dns");
 
-//change DNS
+
 dns.setServers(["1.1.1.1","8.8.8.8"]);
 
-// MongoDB Setup
+
 const DB_URL = process.env.atlas_URL;
 mongoose.connect(DB_URL)
     .then(() => console.log('Successfully connected to MongoDB Atlas!'))
@@ -45,13 +41,11 @@ const taskSchema = new mongoose.Schema({
 });
 const Task = mongoose.model("Task", taskSchema);
 
-// Middleware
-app.use(cors()); // Isse React app aapki Express API ko access kar payegi
+
+app.use(cors()); i
 app.use(express.json());
 
-// ===== API ROUTES FOR REACT =====
 
-// 1. Get all tasks
 app.get('/api/tasks', async (req, res) => {
     try {
         const tasks = await Task.find({});
@@ -61,8 +55,7 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
-// 2. Add a task
-// ❌ app.post('/add-task', ...) KO BADAL KAR YEH KRO:
+
 app.post('/api/tasks', async (req, res) => {
     try {
         const newTask = new Task({
@@ -76,7 +69,7 @@ app.post('/api/tasks', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-// 3. Delete a task
+
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
         await Task.findByIdAndDelete(req.params.id);
@@ -86,7 +79,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
     }
 });
 
-// 4. Toggle Complete status
+
 app.put('/api/tasks/:id/toggle', async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);

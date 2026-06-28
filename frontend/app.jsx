@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './App.css'; // Aap apni styling yahan daal sakte ho
+import './App.css'; 
 
 function App() {
   // States to store tasks and form inputs
@@ -11,7 +11,7 @@ function App() {
 
   const API_URL = "https://taskforze.onrender.com";
 
-  // 1. Fetch all tasks from MongoDB on page load
+  
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -26,7 +26,7 @@ function App() {
     }
   };
 
-  // 2. Add Task (Bina refresh ke)
+  
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!taskText.trim()) return;
@@ -39,10 +39,10 @@ function App() {
       });
       const newTask = await res.json();
       
-      // State update: Purane tasks me naya task bina reload ke jodo
+     
       setTasks([...tasks, newTask]);
       
-      // Reset form
+      
       setTaskText("");
       setDueDate("");
       setPriority("Medium");
@@ -51,7 +51,7 @@ function App() {
     }
   };
 
-  // 3. Delete Task (Bina refresh ke)
+  
   const handleDeleteTask = async (id) => {
     try {
       await fetch(`${API_URL}/${id}`, { method: "DELETE" });
@@ -62,19 +62,19 @@ function App() {
     }
   };
 
-  // 4. Toggle Complete Status (Bina refresh ke)
+ 
   const handleToggleComplete = async (id) => {
     try {
       const res = await fetch(`${API_URL}/${id}/toggle`, { method: "PUT" });
       const updatedTask = await res.json();
-      // UI update: Match hone wale task ki properties update karo
+      
       setTasks(tasks.map(task => task._id === id ? updatedTask : task));
     } catch (err) {
       console.error("Error updating task:", err);
     }
   };
 
-  // Calculations for Stats Card
+ 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.completed).length;
   const pendingTasks = totalTasks - completedTasks;
