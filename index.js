@@ -1,129 +1,101 @@
 require("dotenv").config();
-
 const express = require("express");
 const path = require("path");
-const mongoose = require("mongoose"); // Fixed the incorrect import here!
+const mongoose = require("mongoose");
+const cors = require("cors"); // 1. REQUIRE KIYA
+
 const app = express();
+const PORT = 5447;
+
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5174");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    
+    // Browser jab preflight check (OPTIONS request) bhejta hai, toh use turant success response do
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// 3. DATA PARSING MIDDLEWARES
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// --- Iske baad tumhara baki MongoDB connect aur routes ka code aayega ---
 const dns = require("dns");
-const PORT = 5432;
 
 //change DNS
 dns.setServers(["1.1.1.1","8.8.8.8"]);
 
-// 1. MongoDB Setup
+// MongoDB Setup
 const DB_URL = process.env.atlas_URL;
-console.log("Connecting to:", DB_URL);
-
 mongoose.connect(DB_URL)
     .then(() => console.log('Successfully connected to MongoDB Atlas!'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// 2. Define Schema & Model (Replaces tasks.json logic)
+// Task Schema
 const taskSchema = new mongoose.Schema({
     task: { type: String, required: true },
     completed: { type: Boolean, default: false },
     dueDate: String,
-    priority: String,
-    editing: { type: Boolean, default: false }
+    priority: { type: String, default: "Medium" }
 });
-
 const Task = mongoose.model("Task", taskSchema);
 
-// 3. Express Middleware
-app.use(express.urlencoded({ extended: true }));
+// Middleware
+app.use(cors()); // Isse React app aapki Express API ko access kar payegi
 app.use(express.json());
-app.set("view engine", "ejs");
-app.set("views", path.resolve("./views"));
-app.use(express.static("public"));
 
-// 4. Routes (Converted to async/await for Database calls)
-app.get('/', async (req, res) => {
+// ===== API ROUTES FOR REACT =====
+
+// 1. Get all tasks
+app.get('/api/tasks', async (req, res) => {
     try {
-        const allTasks = await Task.find({});
-        const totalTasks = allTasks.length;
-        const completedTasks = allTasks.filter(t => t.completed).length;
-        const pendingTasks = allTasks.filter(t => !t.completed).length;
-
-        let progressPercentage = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
-
-        const search = req.query.search;
-        let filteredTasks = allTasks;
-
-        if (search && search.trim() !== "") {
-            filteredTasks = allTasks.filter(t =>
-                t.task.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        res.render("index", {
-            tasks: filteredTasks,
-            totalTasks,
-            completedTasks,
-            pendingTasks,
-            progressPercentage,
-        });
+        const tasks = await Task.find({});
+        res.json(tasks);
     } catch (err) {
-       console.error("Asli Error Yeh Hai Bhai:", err); // Yeh terminal me error print karega
-       res.status(500).send("Database Error: " + err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.post('/add-task', async (req, res) => {
+// 2. Add a task
+// ❌ app.post('/add-task', ...) KO BADAL KAR YEH KRO:
+app.post('/api/tasks', async (req, res) => {
     try {
         const newTask = new Task({
             task: req.body.task,
             dueDate: req.body.dueDate,
-            priority: req.body.priority
+            priority: req.body.priority || "Medium"
         });
-        await newTask.save();
-        res.redirect('/');
+        const savedTask = await newTask.save();
+        res.status(201).json(savedTask); // React ko JSON bhej diya
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
-
-// NOTE: Changed route parameter from /:index to Mongoose /:id for unique matching
-app.post('/delete-task/:id', async (req, res) => {
+// 3. Delete a task
+app.delete('/api/tasks/:id', async (req, res) => {
     try {
         await Task.findByIdAndDelete(req.params.id);
-        res.redirect('/');
+        res.json({ success: true, message: "Task deleted successfully" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.post('/complete-task/:id', async (req, res) => {
+// 4. Toggle Complete status
+app.put('/api/tasks/:id/toggle', async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
         task.completed = !task.completed;
         await task.save();
-        res.redirect('/');
+        res.json(task);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.get('/edit-task/:id', async (req, res) => {
-    try {
-        await Task.findByIdAndUpdate(req.params.id, { editing: true });
-        res.redirect('/');
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-app.post('/update-task/:id', async (req, res) => {
-    try {
-        await Task.findByIdAndUpdate(req.params.id, { 
-            task: req.body.updatedTask, 
-            editing: false 
-        });
-        res.redirect('/');
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Backend API running on port ${PORT}`));
