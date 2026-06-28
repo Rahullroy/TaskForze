@@ -12,7 +12,7 @@ function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [updatedTaskText, setUpdatedTaskText] = useState("");
 
-  const API_URL = "http://localhost:5447/api/tasks";
+  const API_URL = "https://taskforze.onrender.com";
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {

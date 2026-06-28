@@ -9,7 +9,7 @@ function App() {
   const [priority, setPriority] = useState("Medium");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const API_URL = "http://localhost:5447/api/tasks";
+  const API_URL = "https://taskforze.onrender.com";
 
   // 1. Fetch all tasks from MongoDB on page load
   useEffect(() => {
