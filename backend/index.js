@@ -42,7 +42,7 @@ const taskSchema = new mongoose.Schema({
 const Task = mongoose.model("Task", taskSchema);
 
 
-app.use(cors()); i
+app.use(cors()); 
 app.use(express.json());
 
 
