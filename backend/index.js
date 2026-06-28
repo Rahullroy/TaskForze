@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors"); // 1. REQUIRE KIYA
 
 const app = express();
-const PORT = 5447;
+const PORT = process.env.PORT || 5447;
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:5174");
